@@ -1,6 +1,0 @@
-streamlit
-amadeus
-os
-dotenv
-datetime
-requests
