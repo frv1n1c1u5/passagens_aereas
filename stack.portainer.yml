@@ -1,0 +1,43 @@
+# Stack para deploy via Portainer (Repository) na VPS.
+# Sobe backend + frontend expostos em portas do host, sem Traefik/HTTPS.
+# Use o docker-compose.yml da raiz para dev local; este aqui é só para o Portainer.
+
+services:
+  backend:
+    build:
+      context: ./backend
+      target: runtime
+    environment:
+      AMADEUS_CLIENT_ID: "${AMADEUS_CLIENT_ID:-dummy}"
+      AMADEUS_CLIENT_SECRET: "${AMADEUS_CLIENT_SECRET:-dummy}"
+      AMADEUS_ENV: "${AMADEUS_ENV:-test}"
+      DEFAULT_CURRENCY: "${DEFAULT_CURRENCY:-BRL}"
+      MAX_PARALLEL_AMADEUS: "${MAX_PARALLEL_AMADEUS:-4}"
+      FLEX_MATRIX_BAND: "${FLEX_MATRIX_BAND:-1}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      CORS_ORIGINS: "${CORS_ORIGINS:-*}"
+      PYTHONUNBUFFERED: "1"
+    expose:
+      - "8000"
+    restart: unless-stopped
+    networks:
+      - voos
+
+  frontend:
+    build:
+      context: ./frontend
+      target: runtime
+    environment:
+      BACKEND_INTERNAL_URL: "http://backend:8000"
+      NODE_ENV: "production"
+    ports:
+      - "${HOST_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - voos
+
+networks:
+  voos:
+    driver: bridge
